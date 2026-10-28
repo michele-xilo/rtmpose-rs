@@ -1,0 +1,10 @@
+/target
+**/*.rs.bk
+.DS_Store
+
+# ONNX weights are exported locally, never committed
+/models
+
+# Example outputs and local test images
+/assets/outputs
+/assets/test_image.jpg

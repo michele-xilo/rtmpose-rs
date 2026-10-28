@@ -1,0 +1,82 @@
+[package]
+name = "rtmpose"
+description = "RTMPose, RTMW and RTMDet human pose estimation with ONNX Runtime."
+version = "0.1.0"
+edition = "2021"
+license = "MIT OR Apache-2.0"
+readme = "README.md"
+keywords = ["pose-estimation", "onnx", "computer-vision", "rtmpose"]
+categories = ["computer-vision"]
+rust-version = "1.91.0"
+publish = false
+
+[dependencies]
+anyhow = "1.0"
+image = "0.25"
+imageproc = "0.25"
+nalgebra = "0.34"
+ndarray = "0.17"
+ort = { version = "=2.0.0-rc.12", features = ["ndarray"] }
+serde = { version = "1.0", features = ["derive"], optional = true }
+tracing = "0.1"
+
+[target.'cfg(all(target_vendor = "apple", target_arch = "aarch64"))'.dependencies]
+ort = { version = "=2.0.0-rc.12", features = ["coreml"] }
+
+[target.'cfg(target_os = "windows")'.dependencies]
+ort = { version = "=2.0.0-rc.12", features = ["directml", "cuda"] }
+
+[target.'cfg(all(target_os = "linux", target_arch = "x86_64"))'.dependencies]
+ort = { version = "=2.0.0-rc.12", features = ["cuda"] }
+
+[features]
+default = []
+serde = ["dep:serde"]
+
+[dev-dependencies]
+approx = "0.5"
+criterion = "0.5"
+parameterized = "2.0"
+rand = "0.9.2"
+tracing-subscriber = { version = "0.3", features = ["env-filter", "fmt"] }
+
+[[example]]
+name = "pose_rtm"
+path = "examples/pose_rtm.rs"
+
+[[example]]
+name = "pose_rtmw"
+path = "examples/pose_rtmw.rs"
+
+[[example]]
+name = "ep_bench"
+path = "examples/ep_bench.rs"
+
+[[bench]]
+name = "pose_rtm_benchmarks"
+harness = false
+
+[workspace]
+members = [".", "demo"]
+default-members = ["."]
+
+[profile.release]
+# See https://nnethercote.github.io/perf-book/build-configuration.html
+codegen-units = 1
+lto = "fat"
+opt-level = 3
+panic = "abort"
+strip = true
+
+[profile.dev]
+opt-level = 3  # Enable some optimizations in dev mode
+
+[profile.dev.package."*"]
+opt-level = 3  # Fully optimize dependencies even in dev mode
+
+[profile.ci]
+inherits = "dev"
+opt-level = 0
+
+[profile.ci.package."*"]
+opt-level = 0
