@@ -56,9 +56,8 @@ fn decode_axis(logits: &[f32]) -> (f32, f32) {
 
 // Returned positions are in the warped frame (still in pixel units, post-/
 // split_ratio); the caller has to map them back through the inverse affine.
-// `score` is the max of the two axis peak logits on the raw scale — the
-// estimator applies the sigmoid itself so the visualizer's threshold matches
-// the rest of the codebase's confidence conventions.
+// `score` is the weaker of the two axis peaks on the raw scale, as in mmpose's
+// `get_simcc_maximum`; an off-frame keypoint is often sharp on one axis only.
 pub fn decode_simcc(
     simcc_x: ArrayView3<f32>,
     simcc_y: ArrayView3<f32>,
@@ -103,7 +102,7 @@ pub fn decode_simcc(
         let (y_bin, y_score) = decode_axis(y_slice);
         let x_pixel = x_bin / simcc_split_ratio;
         let y_pixel = y_bin / simcc_split_ratio;
-        let score = x_score.max(y_score);
+        let score = x_score.min(y_score);
         out.push((x_pixel, y_pixel, score));
     }
     Ok(out)
@@ -227,9 +226,10 @@ mod tests {
     }
 
     #[test]
-    fn test_decode_simcc_reports_score_per_keypoint() {
-        // Arrange — single keypoint, x-peak is sharper than y. The reported
-        // score must be the max of the two axis peaks (10.0), not the average.
+    fn test_decode_simcc_scores_keypoint_by_its_weaker_axis() {
+        // Arrange — single keypoint, x-peak is sharper than y. A keypoint
+        // pinned down on one axis only (e.g. a foot below the frame edge) must
+        // not count as confident, so the score is the weaker peak (4.0).
         let mut x = Array3::<f32>::from_elem((1, 1, 10), -50.0);
         let mut y = Array3::<f32>::from_elem((1, 1, 10), -50.0);
         x[[0, 0, 3]] = 10.0;
@@ -240,7 +240,7 @@ mod tests {
 
         // Assert
         assert_eq!(decoded.len(), 1);
-        assert_abs_diff_eq!(decoded[0].2, 10.0, epsilon = 1e-6);
+        assert_abs_diff_eq!(decoded[0].2, 4.0, epsilon = 1e-6);
     }
 
     #[test]

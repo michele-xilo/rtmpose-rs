@@ -175,7 +175,7 @@ impl EstimatorTrait for RtmwPoseEstimator {
 
         let mut landmarks: Vec<Landmark3D> = Vec::with_capacity(decoded.len());
         let mut confidence_sum = 0.0_f32;
-        for (warped_x, warped_y, score) in decoded {
+        for (warped_x, warped_y, confidence) in decoded {
             let (px, py) = match apply_inverse_affine(&transform_matrix, warped_x, warped_y) {
                 Some(p) => p,
                 None => {
@@ -183,7 +183,6 @@ impl EstimatorTrait for RtmwPoseEstimator {
                     return Ok(None);
                 }
             };
-            let confidence = 1.0 / (1.0 + (-score).exp());
             confidence_sum += confidence;
             landmarks.push(Landmark3D::new(px, py, 0.0, confidence, Some(confidence)));
         }
