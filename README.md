@@ -16,6 +16,12 @@ available (CUDA, CoreML, DirectML).
 
 All outputs are 2D image coordinates; `z` is always 0.
 
+<p align="center">
+  <img src="assets/readme/demo.webp" alt="RTMW whole-body keypoints tracking a woman dancing in a kitchen" width="640">
+  <br>
+  <sub>Video by <a href="https://www.pexels.com/video/woman-dancing-in-front-of-a-laptop-5974518/">Katrin Bolovtsova</a> on Pexels.</sub>
+</p>
+
 ## Quick start
 
 The ONNX models are not in git. They live on Hugging Face at
